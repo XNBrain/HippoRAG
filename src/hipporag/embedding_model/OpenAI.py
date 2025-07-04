@@ -11,6 +11,10 @@ from openai import AzureOpenAI
 from ..utils.config_utils import BaseConfig
 from ..utils.logging_utils import get_logger
 from .base import BaseEmbeddingModel, EmbeddingConfig, make_cache_embed
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # 加载.env环境变量
 
 logger = get_logger(__name__)
 
@@ -31,12 +35,19 @@ class OpenAIEmbeddingModel(BaseEmbeddingModel):
             f"Initializing {self.__class__.__name__}'s embedding model with params: {self.embedding_config.model_init_params}")
 
         if self.global_config.azure_embedding_endpoint is None:
+            # 从 .env 读取 embedding base_url 和 api_key
+            base_url = os.getenv("CUSTOM_EMBEDDING_API_URL")
+            api_key = os.getenv("CUSTOM_EMBEDDING_API_KEY")
             self.client = OpenAI(
-                base_url=self.global_config.embedding_base_url
+                base_url=base_url,
+                api_key=api_key
             )
         else:
-            self.client = AzureOpenAI(api_version=self.global_config.azure_embedding_endpoint.split('api-version=')[1],
-                                      azure_endpoint=self.global_config.azure_embedding_endpoint)
+            self.client = AzureOpenAI(
+                api_version=self.global_config.azure_embedding_endpoint.split('api-version=')[1],
+                azure_endpoint=self.global_config.azure_embedding_endpoint
+            )
+
 
 
     def _init_embedding_config(self) -> None:
